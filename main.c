@@ -20,14 +20,14 @@ int memptr = 0;
 // Program counter
 int pc = 0;
 // Stack for storing loop addresses
-stack *loopStack;
+Stack *loopStack;
 
 /**
  * Get the size in bytes of the given opened file
  * 
  * @return the size of the file in bytes
 */
-long getFileSize(FILE *fptr) {
+long get_file_size(FILE *fptr) {
     // Seek to the end of the file
     fseek(fptr, 0, SEEK_END);
     // Use current pointer position as file size
@@ -41,14 +41,14 @@ long getFileSize(FILE *fptr) {
  * 
  * @return a pointer to the beginning of the data, NULL if the file cannot be read.
 */
-char* readFile(char* filename) {
+char* read_file(char* filename) {
     FILE *fptr = fopen(filename, "r");
     // Return null if the file cant be opened
     if(fptr == NULL) {
         return NULL;
     }
     // Allocate a buffer to store the file contents + a null char at the end
-    long size = getFileSize(fptr);
+    long size = get_file_size(fptr);
     char *buffer = malloc(size + 1);
     fread(buffer, size, 1, fptr);
     buffer[size] = 0;
@@ -59,12 +59,12 @@ char* readFile(char* filename) {
 /**
  * Initialise the Brainfuck interpreter values
 */
-void initBrainfuck() {
+void init_brainfuck() {
     // Calculate the size of memory needed for allocation
     int size = NUM_CELLS * sizeof(int);
     startptr = malloc(size);
     // Allocate loop stack
-    loopStack = createStack(STACK_SIZE);
+    loopStack = create_stack(STACK_SIZE);
 }
 
 /**
@@ -72,7 +72,7 @@ void initBrainfuck() {
  * 
  * @return SUCCESS if operation succeeds, ERROR_UNDERFLOW or ERROR_OVERFLOW if not.
 */
-int movePointer(int offset) {
+int move_pointer(int offset) {
     // Bounds checking
     if(memptr + offset < 0) {
         return ERROR_UNDERFLOW;
@@ -89,7 +89,7 @@ int movePointer(int offset) {
  * 
  * @return SUCCESS if no errors occur, an error code if an error occurs.
 */
-int runBrainfuck(char *code) {
+int run_brainfuck(char *code) {
     // True when passing over a loop
     bool skip = false;
     char c;
@@ -107,10 +107,10 @@ int runBrainfuck(char *code) {
                 startptr[memptr]--;
                 break;
             case '<': ;
-                err = movePointer(-1);
+                err = move_pointer(-1);
                 break;
             case '>': ;
-                err = movePointer(1);
+                err = move_pointer(1);
                 break;
             case '.':
                 putchar(startptr[memptr]);
@@ -123,24 +123,24 @@ int runBrainfuck(char *code) {
                     skip = true;
                 } else {
                     // Begin loop
-                    if(stackIsFull(loopStack)) {
+                    if(stack_is_full(loopStack)) {
                         return ERROR_STACK_OVERFLOW;
                     }
-                    stackPush(loopStack, pc);
+                    stack_push(loopStack, pc - 1);
                 }
                 break;
             case ']':
                 if(skip) {
                     skip = false;
                 } else if(startptr[memptr] == 0) {
-                    stackPop(loopStack);
+                    stack_pop(loopStack);
                     continue;
                 } else {
                     // Return to beginning of loop
-                    if(stackIsEmpty(loopStack)) {
+                    if(stack_is_empty(loopStack)) {
                         return ERROR_UNMATCHED_LOOP_CLOSE;
                     }
-                    pc = stackPop(loopStack) - 1;
+                    pc = stack_pop(loopStack);
                 }
                 break;
         }
@@ -151,7 +151,7 @@ int runBrainfuck(char *code) {
     }
 
     // If the loop stack is not empty, a loop was not closed
-    if(!stackIsEmpty(loopStack) || skip) {
+    if(!stack_is_empty(loopStack) || skip) {
         return ERROR_UNCLOSED_LOOP;
     }
 
@@ -160,7 +160,7 @@ int runBrainfuck(char *code) {
 
 int main(int argc, char* argv[]) {
     // Initialise the brainfuck memory
-    initBrainfuck();
+    init_brainfuck();
 
     // Read the filename of the brainfuck file
     if(argc != 2) {
@@ -169,14 +169,14 @@ int main(int argc, char* argv[]) {
     }
     char* filename = argv[1];
     // Attempt to open the input file
-    char* code = readFile(filename);
+    char* code = read_file(filename);
     if(code == NULL) {
         printf("Failed to read file \"%s\"\n", filename);
         return -1;
     }
 
     // Run the brainfuck code
-    int err = runBrainfuck(code);
+    int err = run_brainfuck(code);
 
     printf("\n");
 
@@ -202,7 +202,7 @@ int main(int argc, char* argv[]) {
     // Free used memory
     free(code);
     free(startptr);
-    freeStack(loopStack);
+    free(loopStack);
 
     if(err == SUCCESS) {
         return 0;

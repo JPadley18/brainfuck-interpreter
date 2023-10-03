@@ -2,15 +2,14 @@
 
 #include <stdbool.h>
 
-typedef struct stack {
+typedef struct Stack {
     int top;
     int size;
     int *stack;
-} stack;
+} Stack;
 
-stack *createStack(int size);
-int stackPop(stack *stack);
-void stackPush(stack *stack, int item);
-bool stackIsFull(stack *stack);
-bool stackIsEmpty(stack *stack);
-void freeStack(stack *stack);
+Stack *create_stack(int size);
+int stack_pop(Stack *stack);
+void stack_push(Stack *stack, int item);
+bool stack_is_full(Stack *stack);
+bool stack_is_empty(Stack *stack);

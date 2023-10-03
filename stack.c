@@ -6,8 +6,8 @@
  * 
  * @return a pointer to the stack struct created
 */
-stack *createStack(int size) {
-    stack *newStack = malloc(sizeof(stack));
+Stack *create_stack(int size) {
+    Stack *newStack = malloc(sizeof(Stack));
     newStack->top = 0;
     newStack->size = size;
     newStack->stack = malloc(size * sizeof(int));
@@ -19,7 +19,7 @@ stack *createStack(int size) {
  * 
  * @return the top item of the stack
 */
-int stackPop(stack *stack) {
+int stack_pop(Stack *stack) {
     // Return top value and decrement top pointer
     stack->top--;
     return stack->stack[stack->top];
@@ -28,7 +28,7 @@ int stackPop(stack *stack) {
 /**
  * Push item onto the stack
 */
-void stackPush(stack *stack, int item) {
+void stack_push(Stack *stack, int item) {
     stack->stack[stack->top++] = item;
 }
 
@@ -37,7 +37,7 @@ void stackPush(stack *stack, int item) {
  * 
  * @return true if the stack is full
 */
-bool stackIsFull(stack *stack) {
+bool stack_is_full(Stack *stack) {
     return stack->top >= stack->size -1;
 }
 
@@ -46,14 +46,6 @@ bool stackIsFull(stack *stack) {
  * 
  * @return true if the stack is empty
 */
-bool stackIsEmpty(stack *stack) {
+bool stack_is_empty(Stack *stack) {
     return stack->top == 0;
-}
-
-/** 
- * Free the memory associated with a stack
-*/
-void freeStack(stack *stack) {
-    free(stack->stack);
-    free(stack);
 }
