@@ -99,6 +99,9 @@ int runBrainfuck(char* code) {
             case '.':
                 putchar(startptr[memptr]);
                 break;
+            case ',':
+                startptr[memptr] = getchar();
+                break;
         }
 
         if(err != SUCCESS) {
