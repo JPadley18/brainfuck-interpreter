@@ -81,6 +81,7 @@ int movePointer(int offset) {
  * @return SUCCESS if no errors occur, an error code if an error occurs.
 */
 int runBrainfuck(char* code) {
+    // True when passing over a loop
     bool skip = false;
     char c;
     // Loop over code until terminator is found
@@ -111,11 +112,17 @@ int runBrainfuck(char* code) {
             case '[':
                 if(startptr[memptr] == 0) {
                     skip = true;
+                } else {
+                    // Begin loop
                 }
                 break;
             case ']':
                 if(skip) {
                     skip = false;
+                } else if(startptr[memptr] == 0) {
+                    continue;
+                } else {
+                    // Return to beginning of loop
                 }
                 break;
         }
@@ -158,6 +165,9 @@ int main(int argc, char* argv[]) {
             printf("Memory Overflow Error on char %d\n", pc);
             break;
     }
+
+    // Free used memory
+    free(code);
 
     return 0;
 }
