@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-#define NUM_CELLS 1
+#define NUM_CELLS 30000
 
 #define ERROR_UNDERFLOW -1
 #define SUCCESS 0
@@ -11,6 +12,8 @@
 int *startptr;
 // Address of the Brainfuck memory pointer
 int memptr = 0;
+// Program counter
+int pc = 0;
 
 /**
  * Get the size in bytes of the given opened file
@@ -78,11 +81,14 @@ int movePointer(int offset) {
  * @return SUCCESS if no errors occur, an error code if an error occurs.
 */
 int runBrainfuck(char* code) {
+    bool skip = false;
     char c;
-    int i = 0;
     // Loop over code until terminator is found
-    while((c = code[i++]) != '\0') {
+    while((c = code[pc++]) != '\0') {
         int err = SUCCESS;
+        if(skip && c != ']'){
+            continue;
+        }
         switch(c) {
             case '+':
                 startptr[memptr]++;
@@ -101,6 +107,16 @@ int runBrainfuck(char* code) {
                 break;
             case ',':
                 startptr[memptr] = getchar();
+                break;
+            case '[':
+                if(startptr[memptr] == 0) {
+                    skip = true;
+                }
+                break;
+            case ']':
+                if(skip) {
+                    skip = false;
+                }
                 break;
         }
 
@@ -136,10 +152,10 @@ int main(int argc, char* argv[]) {
     // Print error if it occurred
     switch(err) {
         case ERROR_UNDERFLOW:
-            printf("Memory Underflow Error\n");
+            printf("Memory Underflow Error on char %d\n", pc);
             break;
         case ERROR_OVERFLOW:
-            printf("Memory Overflow Error\n");
+            printf("Memory Overflow Error on char %d\n", pc);
             break;
     }
 
