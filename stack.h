@@ -1,10 +1,16 @@
 #pragma once
 
-struct Stack {
-    int top;
-    int *stack;
-};
+#include <stdbool.h>
 
-Stack* createStack(int size);
-int stackPop(Stack* stack);
-int stackPush(Stack* stack, int item);
+typedef struct stack {
+    int top;
+    int size;
+    int *stack;
+} stack;
+
+stack *createStack(int size);
+int stackPop(stack *stack);
+void stackPush(stack *stack, int item);
+bool stackIsFull(stack *stack);
+bool stackIsEmpty(stack *stack);
+void freeStack(stack *stack);

@@ -1,12 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "stack.h"
 
 #define NUM_CELLS 30000
+#define STACK_SIZE 1024
 
 #define ERROR_UNDERFLOW -1
 #define SUCCESS 0
 #define ERROR_OVERFLOW 1
+#define ERROR_STACK_OVERFLOW 2
+#define ERROR_UNCLOSED_LOOP 3
+#define ERROR_UNMATCHED_LOOP_CLOSE 4
 
 // Address of the beginning of the allocated memory space
 int *startptr;
@@ -14,6 +19,8 @@ int *startptr;
 int memptr = 0;
 // Program counter
 int pc = 0;
+// Stack for storing loop addresses
+stack *loopStack;
 
 /**
  * Get the size in bytes of the given opened file
@@ -56,6 +63,8 @@ void initBrainfuck() {
     // Calculate the size of memory needed for allocation
     int size = NUM_CELLS * sizeof(int);
     startptr = malloc(size);
+    // Allocate loop stack
+    loopStack = createStack(STACK_SIZE);
 }
 
 /**
@@ -80,7 +89,7 @@ int movePointer(int offset) {
  * 
  * @return SUCCESS if no errors occur, an error code if an error occurs.
 */
-int runBrainfuck(char* code) {
+int runBrainfuck(char *code) {
     // True when passing over a loop
     bool skip = false;
     char c;
@@ -114,15 +123,24 @@ int runBrainfuck(char* code) {
                     skip = true;
                 } else {
                     // Begin loop
+                    if(stackIsFull(loopStack)) {
+                        return ERROR_STACK_OVERFLOW;
+                    }
+                    stackPush(loopStack, pc);
                 }
                 break;
             case ']':
                 if(skip) {
                     skip = false;
                 } else if(startptr[memptr] == 0) {
+                    stackPop(loopStack);
                     continue;
                 } else {
                     // Return to beginning of loop
+                    if(stackIsEmpty(loopStack)) {
+                        return ERROR_UNMATCHED_LOOP_CLOSE;
+                    }
+                    pc = stackPop(loopStack) - 1;
                 }
                 break;
         }
@@ -131,6 +149,12 @@ int runBrainfuck(char* code) {
             return err;
         }
     }
+
+    // If the loop stack is not empty, a loop was not closed
+    if(!stackIsEmpty(loopStack) || skip) {
+        return ERROR_UNCLOSED_LOOP;
+    }
+
     return SUCCESS;
 }
 
@@ -164,10 +188,24 @@ int main(int argc, char* argv[]) {
         case ERROR_OVERFLOW:
             printf("Memory Overflow Error on char %d\n", pc);
             break;
+        case ERROR_STACK_OVERFLOW:
+            printf("Exceeded maximum allowed nested loop level (%d) on char %d\n", STACK_SIZE, pc);
+            break;
+        case ERROR_UNCLOSED_LOOP:
+            printf("Unclosed loop at char %d\n", pc);
+            break;
+        case ERROR_UNMATCHED_LOOP_CLOSE:
+            printf("Unmatched ']' at char %d\n", pc);
+            break;
     }
 
     // Free used memory
     free(code);
+    free(startptr);
+    freeStack(loopStack);
 
-    return 0;
+    if(err == SUCCESS) {
+        return 0;
+    }
+    return -1;
 }
