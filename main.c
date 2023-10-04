@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "stack.h"
+#include "optimize.h"
 
 #define NUM_CELLS 30000
 #define CELL_TYPE unsigned char
@@ -166,12 +167,12 @@ int run_brainfuck(char *code) {
 void get_code_location(char *code, int *out) {
     char c;
     int lineNum = 1;
-    int charNum = 0;
+    int charNum = 1;
     for(int i = 0; i < pc; i++) {
         c = code[i];
         if(c == '\n') {
             lineNum++;
-            charNum = 0;
+            charNum = 1;
         } else {
             charNum++;
         }
