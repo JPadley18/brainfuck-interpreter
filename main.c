@@ -4,6 +4,7 @@
 #include "stack.h"
 
 #define NUM_CELLS 30000
+#define CELL_SIZE (int) sizeof(int)
 #define STACK_SIZE 1024
 
 #define ERROR_UNDERFLOW -1
@@ -61,7 +62,7 @@ char* read_file(char* filename) {
 */
 void init_brainfuck() {
     // Calculate the size of memory needed for allocation
-    int size = NUM_CELLS * sizeof(int);
+    int size = NUM_CELLS * CELL_SIZE;
     startptr = malloc(size);
     // Allocate loop stack
     loopStack = create_stack(STACK_SIZE);
@@ -76,7 +77,7 @@ int move_pointer(int offset) {
     // Bounds checking
     if(memptr + offset < 0) {
         return ERROR_UNDERFLOW;
-    } else if(memptr + offset > NUM_CELLS - 1) {
+    } else if(memptr + offset > (NUM_CELLS - 1) * CELL_SIZE) {
         return ERROR_OVERFLOW;
     }
     // Move the pointer if bounds checking succeeds
@@ -107,16 +108,20 @@ int run_brainfuck(char *code) {
                 startptr[memptr]--;
                 break;
             case '<': ;
-                err = move_pointer(-1);
+                err = move_pointer(-CELL_SIZE);
                 break;
             case '>': ;
-                err = move_pointer(1);
+                err = move_pointer(CELL_SIZE);
                 break;
             case '.':
                 putchar(startptr[memptr]);
                 break;
             case ',':
                 startptr[memptr] = getchar();
+                // If EOF character is entered, set cell to zero instead
+                if(startptr[memptr] == EOF) {
+                    startptr[memptr] = 0;
+                }
                 break;
             case '[':
                 if(startptr[memptr] == 0) {
