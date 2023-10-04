@@ -171,10 +171,10 @@ int run_brainfuck(char *code) {
 */
 void get_code_location(char *code, int *out) {
     char c;
-    int i = 0;
     int lineNum = 1;
     int charNum = 0;
-    while((c = code[i++]) != '\0') {
+    for(int i = 0; i < pc; i++) {
+        c = code[i];
         if(c == '\n') {
             lineNum++;
             charNum = 0;
