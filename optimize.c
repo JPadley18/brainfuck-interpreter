@@ -11,9 +11,11 @@
 */
 void compress(char *source, char* dest) {
     regex_t regex;
-    int err = regcomp(&regex, "[\\[\\]\\+\\-\\.\\,\\<\\>]", 0);
+    int err = regcomp(&regex, "[][><,.+-]", 0);
     if(err) {
-        printf("Error compiling compression regex\n");
+        char errBuf[50];
+        regerror(err, &regex, errBuf, 50);
+        printf("Error compiling compression regex: %s\n", errBuf);
         return;
     }
 
@@ -21,7 +23,7 @@ void compress(char *source, char* dest) {
     int j = 0;
     for(int i = 0; (c = source[i]) != '\0'; i++) {
         char inputStr[2] = {c, '\0'};
-        if(!regexec(&regex, inputStr, 0, NULL, 0)) {
+        if(regexec(&regex, inputStr, 0, NULL, 0) == 0) {
             dest[j++] = c;
         }
     }

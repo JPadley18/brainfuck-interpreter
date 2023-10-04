@@ -55,7 +55,12 @@ char* read_file(char* filename) {
     fread(buffer, size, 1, fptr);
     buffer[size] = 0;
 
-    return buffer;
+    // Compress the brainfuck code
+    char *compressBuffer = malloc(size + 1);
+    compress(buffer, compressBuffer);
+    free(buffer);
+
+    return compressBuffer;
 }
 
 /**
