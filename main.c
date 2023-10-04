@@ -119,7 +119,7 @@ int run_brainfuck(char *code) {
             case ',':
                 startptr[memptr] = getchar();
                 // If EOF character is entered, set cell to zero instead
-                if(startptr[memptr] == EOF) {
+                if(startptr[memptr] < 0) {
                     startptr[memptr] = 0;
                 }
                 break;
