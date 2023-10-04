@@ -15,6 +15,6 @@ make
 ```
 to create a `bf` executable. With the `bf` executable in the same directory as your brainfuck source code file, run
 ```
-bf your-code.bf
+./bf your-code.bf
 ```
 to execute the program.
