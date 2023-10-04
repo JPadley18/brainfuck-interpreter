@@ -4,7 +4,7 @@
 #include "stack.h"
 
 #define NUM_CELLS 30000
-#define CELL_SIZE (int) sizeof(int)
+#define CELL_SIZE (int) sizeof(unsigned char)
 #define STACK_SIZE 1024
 
 #define ERROR_UNDERFLOW -1
