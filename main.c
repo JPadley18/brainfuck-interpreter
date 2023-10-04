@@ -4,7 +4,8 @@
 #include "stack.h"
 
 #define NUM_CELLS 30000
-#define CELL_SIZE (int) sizeof(unsigned char)
+#define CELL_TYPE unsigned char
+#define CELL_SIZE (int) sizeof(CELL_TYPE)
 #define STACK_SIZE 1024
 
 #define ERROR_UNDERFLOW -1
@@ -15,7 +16,7 @@
 #define ERROR_UNMATCHED_LOOP_CLOSE 4
 
 // Address of the beginning of the allocated memory space
-int *startptr;
+CELL_TYPE *startptr;
 // Address of the Brainfuck memory pointer
 int memptr = 0;
 // Program counter
@@ -77,7 +78,7 @@ int move_pointer(int offset) {
     // Bounds checking
     if(memptr + offset < 0) {
         return ERROR_UNDERFLOW;
-    } else if(memptr + offset > (NUM_CELLS - 1) * CELL_SIZE) {
+    } else if(memptr + offset > NUM_CELLS - 1) {
         return ERROR_OVERFLOW;
     }
     // Move the pointer if bounds checking succeeds
@@ -108,20 +109,16 @@ int run_brainfuck(char *code) {
                 startptr[memptr]--;
                 break;
             case '<': ;
-                err = move_pointer(-CELL_SIZE);
+                err = move_pointer(-1);
                 break;
             case '>': ;
-                err = move_pointer(CELL_SIZE);
+                err = move_pointer(1);
                 break;
             case '.':
                 putchar(startptr[memptr]);
                 break;
             case ',':
                 startptr[memptr] = getchar();
-                // If EOF character is entered, set cell to zero instead
-                if(startptr[memptr] < 0) {
-                    startptr[memptr] = 0;
-                }
                 break;
             case '[':
                 if(startptr[memptr] == 0) {
@@ -195,7 +192,7 @@ void get_code_location(char *code, int *out) {
 void get_trace(char *code, char *trace) {
     int lineAndChar[2];
     get_code_location(code, lineAndChar);
-    char c = code[pc];
+    char c = code[pc - 1];
     sprintf(trace, "line %d char %d (\"%c\")", lineAndChar[0], lineAndChar[1], c);
 }
 
