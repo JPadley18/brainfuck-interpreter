@@ -45,8 +45,50 @@ void remove_non_matches(char *source, char *dest, char *pattern) {
         sourceOffset += matches[0].rm_eo;
         destOffset += matchLength;
     }
+    dest[destOffset] = 0;
 
     regfree(&regex);
+}
+
+/**
+ * Turn repeated sequences of chars into the form [count][char]
+ * 
+ * @param source char pointer to the source string
+ * @param dest char pointer to a char buffer destination
+*/
+void optimize(char *source, char *dest) {
+    char c;
+    int destPtr = 0;
+    char currentRepeat = -1;
+    int repeats = 1;
+    int i = 0;
+    while((c = source[i++]) != 0) {
+        // If the current repeated char changes or we reach the end of the string
+        if(c != currentRepeat) {
+            if(repeats > 1) {
+                char str[10];
+                sprintf(str, "%d", repeats);
+                // Copy numeric string to destination
+                int len = strlen(str);
+                memcpy(dest + destPtr, str, len);
+                destPtr += len;
+            }
+            if(currentRepeat != -1) {
+                dest[destPtr++] = currentRepeat;
+            }
+            repeats = 1;
+            if(c == ']' || c == '[') {
+                currentRepeat = -1;
+                dest[destPtr++] = c;
+            } else {
+                currentRepeat = c;
+            }
+        } else {
+            repeats++;
+        }
+    }
+    dest[destPtr] = currentRepeat;
+    dest[destPtr + 1] = 0;
 }
 
 /**
@@ -56,8 +98,9 @@ void remove_non_matches(char *source, char *dest, char *pattern) {
  * @param dest char pointer to a destination buffer
 */
 void compress(char *source, char* dest) {
-    // Remove non-brainfuck characters
-    remove_non_matches(source, dest, "[][><,.+-]\\{1,\\}");
-    //char *temp = malloc(strlen(dest));
-    //free(temp);
+    // Remove non-brainfuck characters and optimize repeated ones
+    char *temp = malloc(strlen(source));
+    remove_non_matches(source, temp, "[][><,.+-]\\{1,\\}");
+    optimize(temp, dest);
+    free(temp);
 }

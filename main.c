@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "stack.h"
 #include "optimize.h"
 
@@ -100,23 +101,35 @@ int run_brainfuck(char *code) {
     int skip = 0;
     char c;
     // Loop over code until terminator is found
+    int numPtr = 0;
+    char numBuf[10];
     while((c = code[pc++]) != '\0') {
         int err = SUCCESS;
         if(skip && c != ']' && c != '['){
             continue;
         }
+        // If c is a number, read whole number
+        int repeats = 1;
+        if(c >= '0' && c <= '9') {
+            numBuf[numPtr++] = c;
+        } else if(numPtr > 0) {
+            // If a number is stored, use it as repeats for next instruction
+            numBuf[numPtr] = 0;
+            repeats = atoi(numBuf);
+            numPtr = 0;
+        }
         switch(c) {
             case '+':
-                startptr[memptr]++;
+                startptr[memptr] += repeats;
                 break;
             case '-':
-                startptr[memptr]--;
+                startptr[memptr] -= repeats;
                 break;
             case '<': ;
-                err = move_pointer(-1);
+                err = move_pointer(-repeats);
                 break;
             case '>': ;
-                err = move_pointer(1);
+                err = move_pointer(repeats);
                 break;
             case '.':
                 putchar(startptr[memptr]);
