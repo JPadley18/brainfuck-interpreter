@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include "stack.h"
 
 #define NUM_CELLS 30000
@@ -63,8 +62,7 @@ char* read_file(char* filename) {
 */
 void init_brainfuck() {
     // Calculate the size of memory needed for allocation
-    int size = NUM_CELLS * CELL_SIZE;
-    startptr = malloc(size);
+    startptr = calloc(NUM_CELLS, CELL_SIZE);
     // Allocate loop stack
     loopStack = create_stack(STACK_SIZE);
 }
@@ -92,13 +90,13 @@ int move_pointer(int offset) {
  * @return SUCCESS if no errors occur, an error code if an error occurs.
 */
 int run_brainfuck(char *code) {
-    // True when passing over a loop
-    bool skip = false;
+    // > 0 when passing over a loop
+    int skip = 0;
     char c;
     // Loop over code until terminator is found
     while((c = code[pc++]) != '\0') {
         int err = SUCCESS;
-        if(skip && c != ']'){
+        if(skip && c != ']' && c != '['){
             continue;
         }
         switch(c) {
@@ -121,8 +119,8 @@ int run_brainfuck(char *code) {
                 startptr[memptr] = getchar();
                 break;
             case '[':
-                if(startptr[memptr] == 0) {
-                    skip = true;
+                if(startptr[memptr] == 0 || skip) {
+                    skip += 1;
                 } else {
                     // Begin loop
                     if(stack_is_full(loopStack)) {
@@ -133,10 +131,9 @@ int run_brainfuck(char *code) {
                 break;
             case ']':
                 if(skip) {
-                    skip = false;
+                    skip -= 1;
                 } else if(startptr[memptr] == 0) {
                     stack_pop(loopStack);
-                    continue;
                 } else {
                     // Return to beginning of loop
                     if(stack_is_empty(loopStack)) {
