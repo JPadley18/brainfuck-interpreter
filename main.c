@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <getopt.h>
 #include "stack.h"
 #include "optimize.h"
 
@@ -9,12 +11,12 @@
 #define CELL_SIZE (int) sizeof(CELL_TYPE)
 #define STACK_SIZE 1024
 
-#define ERROR_UNDERFLOW -1
 #define SUCCESS 0
-#define ERROR_OVERFLOW 1
-#define ERROR_STACK_OVERFLOW 2
-#define ERROR_UNCLOSED_LOOP 3
-#define ERROR_UNMATCHED_LOOP_CLOSE 4
+#define ERROR_UNDERFLOW 1
+#define ERROR_OVERFLOW 2
+#define ERROR_STACK_OVERFLOW 3
+#define ERROR_UNCLOSED_LOOP 4
+#define ERROR_UNMATCHED_LOOP_CLOSE 5
 
 // Address of the beginning of the allocated memory space
 CELL_TYPE *startptr;
@@ -40,11 +42,15 @@ long get_file_size(FILE *fptr) {
 }
 
 /**
- * Reads the given file into memory
+ * Reads the given brainfuck file into memory. Strips and compresses the brainfuck code with RLE.
+ * 
+ * @param filename char pointer to the filename string
+ * @param compression compression setting to use
+ * @param verbose if true, output verbose messages to console
  * 
  * @return a pointer to the beginning of the data, NULL if the file cannot be read.
 */
-char* read_file(char* filename) {
+char* read_file(char* filename, int compression, int verbose) {
     FILE *fptr = fopen(filename, "r");
     // Return null if the file cant be opened
     if(fptr == NULL) {
@@ -56,10 +62,19 @@ char* read_file(char* filename) {
     fread(buffer, size, 1, fptr);
     buffer[size] = 0;
 
+    if(compression == NO_COMPRESSION) {
+        printf("Skipping compression\n");
+        return buffer;
+    }
+
     // Compress the brainfuck code
     char *compressBuffer = malloc(size + 1);
-    compress(buffer, compressBuffer);
+    compress(buffer, compressBuffer, compression);
     free(buffer);
+
+    if(verbose) {
+        printf("Compressed source code (%ld bytes -> %ld bytes)\n", size + 1, strlen(compressBuffer));
+    }
 
     return compressBuffer;
 }
@@ -213,17 +228,44 @@ void get_trace(char *code, char *trace) {
 }
 
 int main(int argc, char* argv[]) {
+    // No compression flag
+    int nFlag = 0;
+    // Strip chars only flag
+    int sFlag = 0;
+    // Verbose output flag
+    int vFlag = 0;
+
+    // Parse command line args
+    int c;
+    while((c = getopt(argc, argv, "nsv")) != -1) {
+        switch(c) {
+            case 'n':
+                nFlag = 1;
+                break;
+            case 's':
+                sFlag = 1;
+                break;
+            case 'v':
+                vFlag = 1;
+                break;
+            default:
+                exit(1);
+        }
+    }
+
+    if(nFlag && sFlag) {
+        printf("Invalid argument combination '-n' & '-s'\n");
+        exit(1);
+    }
+
     // Initialise the brainfuck memory
     init_brainfuck();
 
-    // Read the filename of the brainfuck file
-    if(argc != 2) {
-        printf("Expected 1 argument, got %d\n", argc-1);
-        return -1;
-    }
-    char* filename = argv[1];
+    char* filename = argv[optind];
     // Attempt to open the input file
-    char* code = read_file(filename);
+    int compression = nFlag ? NO_COMPRESSION : COMPRESS;
+    compression = sFlag ? STRIP_ONLY : compression;
+    char* code = read_file(filename, compression, vFlag);
     if(code == NULL) {
         printf("Failed to read file \"%s\"\n", filename);
         return -1;
@@ -231,8 +273,6 @@ int main(int argc, char* argv[]) {
 
     // Run the brainfuck code
     int err = run_brainfuck(code);
-
-    printf("\n");
 
     // Print error if it occurred
     char trace[50];
@@ -260,6 +300,7 @@ int main(int argc, char* argv[]) {
     // Free used memory
     free(code);
     free(startptr);
+    free(loopStack->stack);
     free(loopStack);
 
     if(err == SUCCESS) {

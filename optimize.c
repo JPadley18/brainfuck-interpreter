@@ -92,15 +92,25 @@ void optimize(char *source, char *dest) {
 }
 
 /**
- * Compresses a brainfuck string into its minimal form
+ * Compresses a brainfuck string into its minimal form.
+ * This function should not be called with NO_COMPRESSION as it will simply copy `source` -> `dest`
  * 
  * @param source char pointer to the null-terminated code source
  * @param dest char pointer to a destination buffer
+ * @param compression int compression mode (NO_COMPRESSION, STRIP_ONLY, COMPRESS)
 */
-void compress(char *source, char* dest) {
+void compress(char *source, char* dest, int compression) {
     // Remove non-brainfuck characters and optimize repeated ones
-    char *temp = malloc(strlen(source));
-    remove_non_matches(source, temp, "[][><,.+-]\\{1,\\}");
-    optimize(temp, dest);
-    free(temp);
+    if(compression != NO_COMPRESSION) {
+        if(compression == COMPRESS) {
+            char *temp = malloc(strlen(source));
+            remove_non_matches(source, temp, "[][><,.+-]\\{1,\\}");
+            optimize(temp, dest);
+            free(temp);
+        } else {
+            remove_non_matches(source, dest, "[][><,.+-]\\{1,\\}");
+        }
+    } else {
+        memcpy(dest, source, strlen(dest));
+    }
 }
