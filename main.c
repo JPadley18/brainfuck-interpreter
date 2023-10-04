@@ -158,6 +158,42 @@ int run_brainfuck(char *code) {
     return SUCCESS;
 }
 
+/**
+ * Get line and char number of program counter index
+ * 
+ * @param code char pointer to the start of the code string
+ * @param out int array[2] to store line num and char num respectively
+*/
+void get_code_location(char *code, int *out) {
+    char c;
+    int i = 0;
+    int lineNum = 1;
+    int charNum = 0;
+    while((c = code[i++]) != '\0') {
+        if(c == '\n') {
+            lineNum++;
+            charNum = 0;
+        } else {
+            charNum++;
+        }
+    }
+    out[0] = lineNum;
+    out[1] = charNum;
+}
+
+/**
+ * Get a readable trace of the program counter (line # char # (char val))
+ * 
+ * @param code pointer to the code string
+ * @param trace pointer to string buffer to store result
+*/
+void get_trace(char *code, char *trace) {
+    int lineAndChar[2];
+    get_code_location(code, lineAndChar);
+    char c = code[pc];
+    sprintf(trace, "line %d char %d (\"%c\")", lineAndChar[0], lineAndChar[1], c);
+}
+
 int main(int argc, char* argv[]) {
     // Initialise the brainfuck memory
     init_brainfuck();
@@ -181,21 +217,25 @@ int main(int argc, char* argv[]) {
     printf("\n");
 
     // Print error if it occurred
+    char trace[50];
+    if(err != SUCCESS) {
+        get_trace(code, trace);
+    }
     switch(err) {
         case ERROR_UNDERFLOW:
-            printf("Memory Underflow Error on char %d\n", pc);
+            printf("Memory Underflow Error on %s\n", trace);
             break;
         case ERROR_OVERFLOW:
-            printf("Memory Overflow Error on char %d\n", pc);
+            printf("Memory Overflow Error on %s\n", trace);
             break;
         case ERROR_STACK_OVERFLOW:
-            printf("Exceeded maximum allowed nested loop level (%d) on char %d\n", STACK_SIZE, pc);
+            printf("Exceeded maximum allowed nested loop level (%d) on %s\n", STACK_SIZE, trace);
             break;
         case ERROR_UNCLOSED_LOOP:
-            printf("Unclosed loop at char %d\n", pc);
+            printf("Unclosed loop at %s\n", trace);
             break;
         case ERROR_UNMATCHED_LOOP_CLOSE:
-            printf("Unmatched ']' at char %d\n", pc);
+            printf("Unmatched ']' at %sn", trace);
             break;
     }
 
