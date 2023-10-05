@@ -262,6 +262,10 @@ int main(int argc, char* argv[]) {
     init_brainfuck();
 
     char* filename = argv[optind];
+    if(filename == NULL) {
+        printf("Missing required filename argument\n");
+        exit(1);
+    }
     // Attempt to open the input file
     int compression = nFlag ? NO_COMPRESSION : COMPRESS;
     compression = sFlag ? STRIP_ONLY : compression;
