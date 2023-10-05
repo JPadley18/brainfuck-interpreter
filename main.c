@@ -127,6 +127,7 @@ int run_brainfuck(char *code) {
         int repeats = 1;
         if(c >= '0' && c <= '9') {
             numBuf[numPtr++] = c;
+            continue;
         } else if(numPtr > 0) {
             // If a number is stored, use it as repeats for next instruction
             numBuf[numPtr] = 0;
