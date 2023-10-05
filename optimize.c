@@ -66,8 +66,8 @@ void optimize(char *source, char *dest) {
         // If the current repeated char changes or we reach the end of the string
         if(c != currentRepeat) {
             if(repeats > 1) {
-                char str[10];
-                sprintf(str, "%d", repeats);
+                char str[11];
+                snprintf(str, 11, "%d", repeats);
                 // Copy numeric string to destination
                 int len = strlen(str);
                 memcpy(dest + destPtr, str, len);
