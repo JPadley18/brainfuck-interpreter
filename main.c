@@ -61,6 +61,7 @@ char* read_file(char* filename, int compression, int verbose) {
     char *buffer = malloc(size + 1);
     fread(buffer, size, 1, fptr);
     buffer[size] = 0;
+    fclose(fptr);
 
     if(compression == NO_COMPRESSION) {
         printf("Skipping compression\n");
@@ -228,6 +229,28 @@ void get_trace(char *code, char *trace) {
     sprintf(trace, "line %d char %d (\"%c\")", lineAndChar[0], lineAndChar[1], c);
 }
 
+/**
+ * Write a string to file with given name
+ * 
+ * @param text the text to output to file
+ * @param path the path to the output file
+ * 
+ * @return 0 if write fails, else 1
+*/
+int write_file(char *text, char *path) {
+    // Open the file
+    FILE *file = fopen(path, "w");
+    if(file == NULL) {
+        return 0;
+    }
+
+    fprintf(file, "%s", text);
+
+    fclose(file);
+
+    return 1;
+}
+
 int main(int argc, char* argv[]) {
     // No compression flag
     int nFlag = 0;
@@ -235,10 +258,12 @@ int main(int argc, char* argv[]) {
     int sFlag = 0;
     // Verbose output flag
     int vFlag = 0;
+    // Output compressed code to file arg
+    char *outputFile = 0;
 
     // Parse command line args
     int c;
-    while((c = getopt(argc, argv, "nsv")) != -1) {
+    while((c = getopt(argc, argv, "nsvo:")) != -1) {
         switch(c) {
             case 'n':
                 nFlag = 1;
@@ -248,6 +273,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'v':
                 vFlag = 1;
+                break;
+            case 'o':
+                outputFile = optarg;
                 break;
             default:
                 exit(1);
@@ -274,6 +302,15 @@ int main(int argc, char* argv[]) {
     if(code == NULL) {
         printf("Failed to read file \"%s\"\n", filename);
         return -1;
+    }
+
+    // If specified, output compressed code to output file
+    if(outputFile) {
+        if(!write_file(code, outputFile)) {
+            // Something went wrong outputting to the file
+            printf("Failed to write code to output file \"%s\"\n", outputFile);
+            exit(1);
+        }
     }
 
     // Run the brainfuck code
